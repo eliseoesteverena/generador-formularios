@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Markdown to Form Generator</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <h1 class="title">Markdown to Form Generator</h1>
+        
+        <div class="tabs">
+            <div class="tab-buttons">
+                <button id="editor-tab" class="tab-button active">Editor</button>
+                <button id="preview-tab" class="tab-button">Form Preview</button>
+            </div>
+            
+            <div id="editor-content" class="tab-content active">
+                <div class="card">
+                    <div class="card-header">
+                        <div class="button-group">
+                            <div>
+                                <input type="file" id="file-upload" accept=".md,.markdown,.txt" style="display: none;">
+                                <button id="upload-button" class="button button-outline">
+                                    <span class="icon">📤</span> Upload Markdown
+                                </button>
+                                <button id="example-button" class="button button-outline">Load Example</button>
+                            </div>
+                            <div>
+                                <button id="preview-button" class="button button-primary">Preview Form</button>
+                                <button id="clear-button" class="button button-outline">Clear</button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <textarea id="markdown-editor" placeholder="Enter your Markdown content here..."></textarea>
+                    
+                    <div class="syntax-guide">
+                        <h3>Syntax Guide:</h3>
+                        <ul>
+                            <li>Use <code># Title</code> for main title</li>
+                            <li>Use <code>## Section</code> for sections</li>
+                            <li>Questions are automatically detected if they end with <code>?</code></li>
+                            <li>Add descriptions with <code>@desc: Your description text</code> on the line after a question</li>
+                            <li>Response types:
+                                <ul>
+                                    <li><code>@short</code> - Short text input (default)</li>
+                                    <li><code>@long</code> - Long text input (textarea)</li>
+                                    <li><code>@multi</code> - Multiple choice (checkboxes)</li>
+                                    <li><code>@single</code> - Single choice (radio buttons)</li>
+                                    <li><code>@file</code> - File upload</li>
+                                </ul>
+                            </li>
+                            <li>Example:
+                                <pre><code>¿What is your name? @short
+@desc: Enter your full name.
+
+¿Tell us about yourself? @long
+
+¿Which fruits do you like? @multi
+- Apples
+- Bananas
+- Oranges
+
+¿What is your favorite color? @single
+- Red
+- Blue
+- Green
+
+¿Upload your resume? @file
+@desc: PDF or DOCX format only.</code></pre>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            
+            <div id="preview-content" class="tab-content">
+                <div class="card">
+                    <div id="form-preview" class="form-preview">
+                        <div class="empty-message">Enter some Markdown content in the editor to see the preview</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Modal for editing descriptions -->
+    <div id="description-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Add Description</h2>
+                <span class="close-modal">&times;</span>
+            </div>
+            <div class="modal-body">
+                <textarea id="description-textarea" placeholder="Add additional information or instructions for this question..."></textarea>
+                <button id="save-description" class="button button-primary">Save</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
