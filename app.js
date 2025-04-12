@@ -26,22 +26,22 @@ document.addEventListener('DOMContentLoaded', function() {
 ## Sección 1: Preguntas básicas
 
 ¿Cuál es tu nombre completo? @short
-@desc: Por favor, ingresa tu nombre y apellidos completos.
+@desc Por favor, ingresa tu nombre y apellidos completos.
 
 ¿Cuál es tu fecha de nacimiento?
 
 ¿Cuéntanos sobre ti? @long
-@desc: Describe brevemente tu experiencia y habilidades.
+@desc Describe brevemente tu experiencia y habilidades.
 
 ## Sección 2: Preferencias
 
 ¿Cuál es tu color favorito?
-@desc: Indica el color que más te gusta.
+@desc Indica el color que más te gusta.
 
 ### Opciones múltiples
 
 ¿Qué frutas te gustan? @multi
-@desc: Puedes seleccionar varias opciones.
+@desc Puedes seleccionar varias opciones.
 - Manzanas
 - Plátanos
 - Fresas
@@ -50,7 +50,7 @@ document.addEventListener('DOMContentLoaded', function() {
 ### Opción única
 
 ¿Cuál es tu deporte favorito? @single
-@desc: Selecciona solo una opción.
+@desc Selecciona solo una opción.
 - Fútbol
 - Baloncesto
 - Tenis
@@ -59,7 +59,7 @@ document.addEventListener('DOMContentLoaded', function() {
 ## Sección 3: Documentos
 
 ¿Puedes subir tu currículum? @file
-@desc: Formatos aceptados: PDF, DOCX, DOC o imágenes.
+@desc Formatos aceptados: PDF, DOCX, DOC o imágenes.
 `;
     
     // Tab switching
@@ -147,7 +147,7 @@ document.addEventListener('DOMContentLoaded', function() {
             }
             
             // Check for description lines
-            if (line.startsWith('@desc:')) {
+            if (line.startsWith('@desc')) {
                 const description = line.substring(6).trim();
                 
                 // If the previous item was a question, add the description to it
@@ -488,14 +488,14 @@ document.addEventListener('DOMContentLoaded', function() {
                     }
                     
                     if (item.description) {
-                        markdown += `\n@desc: ${item.description}`;
+                        markdown += `\n@desc ${item.description}`;
                     }
                     break;
                     
                 case 'multipleChoice':
                     markdown += `${item.question} @multi`;
                     if (item.description) {
-                        markdown += `\n@desc: ${item.description}`;
+                        markdown += `\n@desc ${item.description}`;
                     }
                     item.options.forEach(option => {
                         markdown += `\n- ${option}`;
@@ -505,7 +505,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 case 'singleChoice':
                     markdown += `${item.question} @single`;
                     if (item.description) {
-                        markdown += `\n@desc: ${item.description}`;
+                        markdown += `\n@desc ${item.description}`;
                     }
                     item.options.forEach(option => {
                         markdown += `\n- ${option}`;
@@ -532,7 +532,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // Render form preview
     function renderFormPreview() {
         if (parsedContent.length === 0) {
-            formPreview.innerHTML = '<div class="empty-message">Enter some Markdown content in the editor to see the preview</div>';
+            formPreview.innerHTML = '<div class="empty-message">Ingresa contenido Markdown en el editor para ver la vista previa</div>';
             return;
         }
         
@@ -570,11 +570,14 @@ document.addEventListener('DOMContentLoaded', function() {
                 break;
                 
             case 'question':
+                if(item.responseType === 'multi' || item.responseType === 'single'){
+                    break;
+                }
                 element.className = 'question-container';
                 
                 let questionHtml = `
                     <div class="question-actions">
-                        <button class="button button-icon edit-description" data-index="${index}">✏️</button>
+                        <!--button class="button button-icon edit-description" data-index="${index}">✏️</button-->
                         <button class="button button-icon delete-question" data-index="${index}">🗑️</button>
                     </div>
                     <div class="question-text">${item.content}</div>
@@ -590,7 +593,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 
                 switch (item.responseType) {
                     case 'long':
-                        questionHtml += `<textarea placeholder="Enter your answer here..." class="long-answer"></textarea>`;
+                        questionHtml += `<textarea placeholder="Ingresa tu respuesta aquí..." class="long-answer"></textarea>`;
                         break;
                         
                     case 'file':
@@ -599,35 +602,37 @@ document.addEventListener('DOMContentLoaded', function() {
                                 <input type="file" id="file-${item.id}" class="file-input" accept=".pdf,.doc,.docx,.jpg,.jpeg,.png">
                                 <label for="file-${item.id}" class="file-label">
                                     <span class="file-icon">📎</span>
-                                    <span class="file-text">Choose a file</span>
+                                    <span class="file-text">Elegir un archivo</span>
                                 </label>
-                                <div class="file-info">No file selected</div>
+                                <div class="file-info">Ningún archivo seleccionado</div>
                             </div>
                         `;
                         break;
                         
                     default: // 'short' is the default
-                        questionHtml += `<input type="text" placeholder="Enter your answer here..." class="short-answer">`;
+                        questionHtml += `<input type="text" placeholder="Ingresa tu respuesta aquí..." class="short-answer">`;
                         break;
                 }
                 
                 questionHtml += `</div>`;
                 
                 // Only show response type selector for text inputs (not for file uploads)
-                if (item.responseType !== 'file') {
-                    questionHtml += `
-                        <div class="response-type-selector">
-                            <label>Response type:</label>
-                            <select class="response-type-dropdown" data-index="${index}">
-                                <option value="short" ${item.responseType === 'short' ? 'selected' : ''}>Short text</option>
-                                <option value="long" ${item.responseType === 'long' ? 'selected' : ''}>Long text</option>
-                                <option value="multi" ${item.responseType === 'multi' ? 'selected' : ''}>Multiple choice</option>
-                                <option value="single" ${item.responseType === 'single' ? 'selected' : ''}>Single choice</option>
-                                <option value="file" ${item.responseType === 'file' ? 'selected' : ''}>File upload</option>
-                            </select>
-                        </div>
-                    `;
-                }
+                /*
+                    if (item.responseType !== 'file') {
+                        questionHtml += `
+                            <div class="response-type-selector">
+                                <label>Tipo de respuesta:</label>
+                                <select class="response-type-dropdown" data-index="${index}">
+                                    <option value="short" ${item.responseType === 'short' ? 'selected' : ''}>Texto corto</option>
+                                    <option value="long" ${item.responseType === 'long' ? 'selected' : ''}>Texto largo</option>
+                                    <option value="multi" ${item.responseType === 'multi' ? 'selected' : ''}>Opción múltiple</option>
+                                    <option value="single" ${item.responseType === 'single' ? 'selected' : ''}>Opción única</option>
+                                    <option value="file" ${item.responseType === 'file' ? 'selected' : ''}>Subida de archivo</option>
+                                </select>
+                            </div>
+                        `;
+                    }
+                    */
                 
                 element.innerHTML = questionHtml;
                 
@@ -642,7 +647,7 @@ document.addEventListener('DOMContentLoaded', function() {
                                 if (this.files && this.files.length > 0) {
                                     fileInfo.textContent = this.files[0].name;
                                 } else {
-                                    fileInfo.textContent = 'No file selected';
+                                    fileInfo.textContent = 'Ningún archivo seleccionado';
                                 }
                             });
                         }
@@ -655,7 +660,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 
                 let multipleChoiceHtml = `
                     <div class="question-actions">
-                        <button class="button button-icon edit-description" data-index="${index}">✏️</button>
+                        <!--button class="button button-icon edit-description" data-index="${index}">✏️</button-->
                         <button class="button button-icon delete-question" data-index="${index}">🗑️</button>
                     </div>
                     <div class="question-text">${item.question}</div>
@@ -686,7 +691,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 
                 let singleChoiceHtml = `
                     <div class="question-actions">
-                        <button class="button button-icon edit-description" data-index="${index}">✏️</button>
+                        <!--button class="button button-icon edit-description" data-index="${index}">✏️</button -->
                         <button class="button button-icon delete-question" data-index="${index}">🗑️</button>
                     </div>
                     <div class="question-text">${item.question}</div>
@@ -850,7 +855,7 @@ document.addEventListener('DOMContentLoaded', function() {
             if (e.target.files && e.target.files.length > 0) {
                 fileInfo.textContent = e.target.files[0].name;
             } else {
-                fileInfo.textContent = 'No file selected';
+                fileInfo.textContent = 'Ningún archivo seleccionado';
             }
         }
     });

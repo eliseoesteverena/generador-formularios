@@ -1,19 +1,19 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Markdown to Form Generator</title>
+    <title>Generador de Formularios desde Markdown</title>
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
     <div class="container">
-        <h1 class="title">Markdown to Form Generator</h1>
+        <h1 class="title">Generador de Formularios desde Markdown</h1>
         
         <div class="tabs">
             <div class="tab-buttons">
                 <button id="editor-tab" class="tab-button active">Editor</button>
-                <button id="preview-tab" class="tab-button">Form Preview</button>
+                <button id="preview-tab" class="tab-button">Vista Previa del Formulario</button>
             </div>
             
             <div id="editor-content" class="tab-content active">
@@ -23,53 +23,53 @@
                             <div>
                                 <input type="file" id="file-upload" accept=".md,.markdown,.txt" style="display: none;">
                                 <button id="upload-button" class="button button-outline">
-                                    <span class="icon">📤</span> Upload Markdown
+                                    <span class="icon">📤</span> Subir Markdown
                                 </button>
-                                <button id="example-button" class="button button-outline">Load Example</button>
+                                <button id="example-button" class="button button-outline">Cargar Ejemplo</button>
                             </div>
                             <div>
-                                <button id="preview-button" class="button button-primary">Preview Form</button>
-                                <button id="clear-button" class="button button-outline">Clear</button>
+                                <button id="preview-button" class="button button-primary">Vista Previa del Formulario</button>
+                                <button id="clear-button" class="button button-outline">Borrar</button>
                             </div>
                         </div>
                     </div>
                     
-                    <textarea id="markdown-editor" placeholder="Enter your Markdown content here..."></textarea>
+                    <textarea id="markdown-editor" placeholder="Ingresa tu contenido Markdown aquí..."></textarea>
                     
                     <div class="syntax-guide">
-                        <h3>Syntax Guide:</h3>
+                        <h3>Guía de Sintaxis:</h3>
                         <ul>
-                            <li>Use <code># Title</code> for main title</li>
-                            <li>Use <code>## Section</code> for sections</li>
-                            <li>Questions are automatically detected if they end with <code>?</code></li>
-                            <li>Add descriptions with <code>@desc: Your description text</code> on the line after a question</li>
-                            <li>Response types:
+                            <li>Usa <code># Título</code> para el título principal</li>
+                            <li>Usa <code>## Sección</code> para secciones</li>
+                            <li>Las preguntas se detectan automáticamente si terminan con <code>?</code></li>
+                            <li>Agrega descripciones con <code>@desc Tu texto de descripción</code> en la línea después de una pregunta</li>
+                            <li>Tipos de respuesta:
                                 <ul>
-                                    <li><code>@short</code> - Short text input (default)</li>
-                                    <li><code>@long</code> - Long text input (textarea)</li>
-                                    <li><code>@multi</code> - Multiple choice (checkboxes)</li>
-                                    <li><code>@single</code> - Single choice (radio buttons)</li>
-                                    <li><code>@file</code> - File upload</li>
+                                    <li><code>@short</code> - Entrada de texto corto (predeterminado)</li>
+                                    <li><code>@long</code> - Entrada de texto largo (área de texto)</li>
+                                    <li><code>@multi</code> - Opción múltiple (casillas de verificación)</li>
+                                    <li><code>@single</code> - Opción única (botones de radio)</li>
+                                    <li><code>@file</code> - Subida de archivo</li>
                                 </ul>
                             </li>
-                            <li>Example:
-                                <pre><code>¿What is your name? @short
-@desc: Enter your full name.
+                            <li>Ejemplo:
+                                <pre><code>¿Cuál es tu nombre? @short
+@desc Ingresa tu nombre completo.
 
-¿Tell us about yourself? @long
+¿Cuéntanos sobre ti? @long
 
-¿Which fruits do you like? @multi
-- Apples
-- Bananas
-- Oranges
+¿Qué frutas te gustan? @multi
+- Manzanas
+- Plátanos
+- Naranjas
 
-¿What is your favorite color? @single
-- Red
-- Blue
-- Green
+¿Cuál es tu color favorito? @single
+- Rojo
+- Azul
+- Verde
 
-¿Upload your resume? @file
-@desc: PDF or DOCX format only.</code></pre>
+¿Sube tu currículum? @file
+@desc Solo formato PDF o DOCX.</code></pre>
                             </li>
                         </ul>
                     </div>
@@ -79,23 +79,23 @@
             <div id="preview-content" class="tab-content">
                 <div class="card">
                     <div id="form-preview" class="form-preview">
-                        <div class="empty-message">Enter some Markdown content in the editor to see the preview</div>
+                        <div class="empty-message">Ingresa contenido Markdown en el editor para ver la vista previa</div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
     
-    <!-- Modal for editing descriptions -->
+    <!-- Modal para editar descripciones -->
     <div id="description-modal" class="modal">
         <div class="modal-content">
             <div class="modal-header">
-                <h2>Add Description</h2>
+                <h2>Agregar Descripción</h2>
                 <span class="close-modal">&times;</span>
             </div>
             <div class="modal-body">
-                <textarea id="description-textarea" placeholder="Add additional information or instructions for this question..."></textarea>
-                <button id="save-description" class="button button-primary">Save</button>
+                <textarea id="description-textarea" placeholder="Agrega información adicional o instrucciones para esta pregunta..."></textarea>
+                <button id="save-description" class="button button-primary">Guardar</button>
             </div>
         </div>
     </div>
