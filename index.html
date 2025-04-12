@@ -10,13 +10,17 @@
     <div class="container">
         <h1 class="title">Generador de Formularios desde Markdown</h1>
         
-        <div class="tabs">
+        <!-- Tabs para móvil -->
+        <div class="tabs-mobile">
             <div class="tab-buttons">
                 <button id="editor-tab" class="tab-button active">Editor</button>
                 <button id="preview-tab" class="tab-button">Vista Previa del Formulario</button>
             </div>
-            
-            <div id="editor-content" class="tab-content active">
+        </div>
+        
+        <!-- Contenedor para vista dividida en desktop -->
+        <div class="split-view">
+            <div id="editor-panel" class="split-panel">
                 <div class="card">
                     <div class="card-header">
                         <div class="button-group">
@@ -28,7 +32,7 @@
                                 <button id="example-button" class="button button-outline">Cargar Ejemplo</button>
                             </div>
                             <div>
-                                <button id="preview-button" class="button button-primary">Vista Previa del Formulario</button>
+                                <!--button id="preview-button" class="button button-primary">Vista Previa del Formulario</button-->
                                 <button id="clear-button" class="button button-outline">Borrar</button>
                             </div>
                         </div>
@@ -36,24 +40,48 @@
                     
                     <textarea id="markdown-editor" placeholder="Ingresa tu contenido Markdown aquí..."></textarea>
                     
-                    <div class="syntax-guide">
-                        <h3>Guía de Sintaxis:</h3>
-                        <ul>
-                            <li>Usa <code># Título</code> para el título principal</li>
-                            <li>Usa <code>## Sección</code> para secciones</li>
-                            <li>Las preguntas se detectan automáticamente si terminan con <code>?</code></li>
-                            <li>Agrega descripciones con <code>@desc Tu texto de descripción</code> en la línea después de una pregunta</li>
-                            <li>Tipos de respuesta:
-                                <ul>
-                                    <li><code>@short</code> - Entrada de texto corto (predeterminado)</li>
-                                    <li><code>@long</code> - Entrada de texto largo (área de texto)</li>
-                                    <li><code>@multi</code> - Opción múltiple (casillas de verificación)</li>
-                                    <li><code>@single</code> - Opción única (botones de radio)</li>
-                                    <li><code>@file</code> - Subida de archivo</li>
-                                </ul>
-                            </li>
-                            <li>Ejemplo:
-                                <pre><code>¿Cuál es tu nombre? @short
+                   
+                </div>
+            </div>
+            
+            <!-- Divisor arrastrable -->
+            <div id="resizer" class="resizer"></div>
+            
+            <div id="preview-panel" class="split-panel">
+                <div class="card">
+                    <div id="form-preview" class="form-preview">
+                        <div class="empty-message">Ingresa contenido Markdown en el editor para ver la vista previa</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <button id="open-modal">Guía de Sintaxis</button>
+    <!-- Modal para editar descripciones -->
+    <div id="sintax-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Guía de Sintaxis</h2>
+                <span class="close-modal">&times;</span>
+            </div>
+            <div class="modal-body">
+                <div class="syntax-guide">
+                    <ul>
+                        <li>Usa <code># Título</code> para el título principal</li>
+                        <li>Usa <code>## Sección</code> para secciones</li>
+                        <li>Las preguntas se detectan automáticamente si terminan con <code>?</code></li>
+                        <li>Agrega descripciones con <code>@desc Tu texto de descripción</code> en la línea después de una pregunta</li>
+                        <li>Tipos de respuesta:
+                            <ul>
+                                <li><code>@short</code> - Entrada de texto corto (predeterminado)</li>
+                                <li><code>@long</code> - Entrada de texto largo (área de texto)</li>
+                                <li><code>@multi</code> - Opción múltiple (casillas de verificación)</li>
+                                <li><code>@single</code> - Opción única (botones de radio)</li>
+                                <li><code>@file</code> - Subida de archivo</li>
+                            </ul>
+                        </li>
+                        <li>Ejemplo:
+                            <pre><code>¿Cuál es tu nombre? @short
 @desc Ingresa tu nombre completo.
 
 ¿Cuéntanos sobre ti? @long
@@ -70,32 +98,10 @@
 
 ¿Sube tu currículum? @file
 @desc Solo formato PDF o DOCX.</code></pre>
-                            </li>
-                        </ul>
-                    </div>
+                        </li>
+                    </ul>
                 </div>
-            </div>
-            
-            <div id="preview-content" class="tab-content">
-                <div class="card">
-                    <div id="form-preview" class="form-preview">
-                        <div class="empty-message">Ingresa contenido Markdown en el editor para ver la vista previa</div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-    
-    <!-- Modal para editar descripciones -->
-    <div id="description-modal" class="modal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h2>Agregar Descripción</h2>
-                <span class="close-modal">&times;</span>
-            </div>
-            <div class="modal-body">
-                <textarea id="description-textarea" placeholder="Agrega información adicional o instrucciones para esta pregunta..."></textarea>
-                <button id="save-description" class="button button-primary">Guardar</button>
+                
             </div>
         </div>
     </div>

@@ -2,93 +2,247 @@ document.addEventListener('DOMContentLoaded', function() {
     // DOM Elements
     const editorTab = document.getElementById('editor-tab');
     const previewTab = document.getElementById('preview-tab');
-    const editorContent = document.getElementById('editor-content');
-    const previewContent = document.getElementById('preview-content');
+    const editorPanel = document.getElementById('editor-panel');
+    const previewPanel = document.getElementById('preview-panel');
     const markdownEditor = document.getElementById('markdown-editor');
     const formPreview = document.getElementById('form-preview');
+   /* const previewButton = document.getElementById('preview-button');*/
+    const clearButton = document.getElementById('clear-button');
     const uploadButton = document.getElementById('upload-button');
     const fileUpload = document.getElementById('file-upload');
     const exampleButton = document.getElementById('example-button');
-    const previewButton = document.getElementById('preview-button');
-    const clearButton = document.getElementById('clear-button');
-    const descriptionModal = document.getElementById('description-modal');
-    const descriptionTextarea = document.getElementById('description-textarea');
-    const saveDescriptionButton = document.getElementById('save-description');
+    const resizer = document.getElementById('resizer');
+    const sintaxModal = document.getElementById('sintax-modal');
+    const openModal = document.getElementById('open-modal');
     const closeModal = document.querySelector('.close-modal');
     
-    // State
-    let parsedContent = [];
-    let currentEditingElement = null;
-    
-    // Example markdown with new syntax
-    const exampleMarkdown = `# Cuestionario de ejemplo
+    // Estado de la aplicación
+    let currentTab = 'editor';
+    let isMobile = window.innerWidth <= 768;
+    let resizerPosition = 50; // Porcentaje inicial para el divisor
 
-## Sección 1: Preguntas básicas
+    // Ejemplo de Markdown
+    const markdownExample = `# Formulario de Contacto
+
+## Información Personal
 
 ¿Cuál es tu nombre completo? @short
-@desc Por favor, ingresa tu nombre y apellidos completos.
+@desc Por favor, ingresa tu nombre y apellidos.
 
-¿Cuál es tu fecha de nacimiento?
+¿Cuál es tu correo electrónico? @short
+@desc Usaremos este correo para contactarte.
 
-¿Cuéntanos sobre ti? @long
-@desc Describe brevemente tu experiencia y habilidades.
+¿Cuál es tu número de teléfono? @short
 
-## Sección 2: Preferencias
+## Preferencias
 
-¿Cuál es tu color favorito?
-@desc Indica el color que más te gusta.
+¿Cómo prefieres que te contactemos? @single
+- Correo electrónico
+- Teléfono
+- Mensaje de texto
 
-### Opciones múltiples
+¿Qué días de la semana estás disponible? @multi
+- Lunes
+- Martes
+- Miércoles
+- Jueves
+- Viernes
+- Sábado
+- Domingo
 
-¿Qué frutas te gustan? @multi
-@desc Puedes seleccionar varias opciones.
-- Manzanas
-- Plátanos
-- Fresas
-- Uvas
+¿Tienes algún comentario adicional? @long
+@desc Cualquier información adicional que quieras compartir.
 
-### Opción única
+¿Puedes adjuntar tu CV? @file
+@desc Archivos PDF o DOCX (máximo 5MB).`;
 
-¿Cuál es tu deporte favorito? @single
-@desc Selecciona solo una opción.
-- Fútbol
-- Baloncesto
-- Tenis
-- Natación
+    // Inicialización
+    init();
 
-## Sección 3: Documentos
+    function init() {
+        // Configurar eventos de pestañas para móvil
+        setupTabEvents();
+        
+        // Configurar el resizer para escritorio
+        setupResizer();
+        
+        // Configurar otros botones
+        setupButtonEvents();
+        
+        // Comprobar tamaño de pantalla inicial
+        checkScreenSize();
+        
+        // Listener para cambios de tamaño de pantalla
+        window.addEventListener('resize', checkScreenSize);
+    }
 
-¿Puedes subir tu currículum? @file
-@desc Formatos aceptados: PDF, DOCX, DOC o imágenes.
-`;
-    
-    // Tab switching
-    editorTab.addEventListener('click', function() {
-        setActiveTab('editor');
-    });
-    
-    previewTab.addEventListener('click', function() {
-        setActiveTab('preview');
-    });
-    
-    previewButton.addEventListener('click', function() {
-        setActiveTab('preview');
-    });
-    
+    function setupTabEvents() {
+        editorTab.addEventListener('click', function() {
+            setActiveTab('editor');
+        });
+        
+        previewTab.addEventListener('click', function() {
+            setActiveTab('preview');
+            generatePreview();
+        });
+        
+       /* previewButton.addEventListener('click', function() {
+            if (isMobile) {
+                setActiveTab('preview');
+            }
+            generatePreview();
+        });*/
+    }
+
     function setActiveTab(tab) {
-        if (tab === 'editor') {
-            editorTab.classList.add('active');
-            previewTab.classList.remove('active');
-            editorContent.classList.add('active');
-            previewContent.classList.remove('active');
-        } else {
-            editorTab.classList.remove('active');
-            previewTab.classList.add('active');
-            editorContent.classList.remove('active');
-            previewContent.classList.add('active');
+        currentTab = tab;
+        
+        // Solo cambia la visualización en móvil
+        if (isMobile) {
+            editorTab.classList.toggle('active', tab === 'editor');
+            previewTab.classList.toggle('active', tab === 'preview');
+            
+            editorPanel.classList.toggle('active', tab === 'editor');
+            previewPanel.classList.toggle('active', tab === 'preview');
         }
     }
-    
+
+    function setupResizer() {
+        let isResizing = false;
+        
+        resizer.addEventListener('mousedown', function(e) {
+            isResizing = true;
+            document.body.style.cursor = 'col-resize';
+            document.addEventListener('mousemove', handleResize);
+            document.addEventListener('mouseup', stopResize);
+            resizer.classList.add('resizing');
+            e.preventDefault();
+        });
+        
+        // También añadimos soporte táctil para el resizer
+        resizer.addEventListener('touchstart', function(e) {
+            isResizing = true;
+            resizer.classList.add('resizing');
+            document.addEventListener('touchmove', handleTouchResize);
+            document.addEventListener('touchend', stopResize);
+            e.preventDefault();
+        });
+        
+        function handleResize(e) {
+            if (!isResizing) return;
+            
+            const container = document.querySelector('.split-view');
+            const containerRect = container.getBoundingClientRect();
+            
+            // Calcular posición relativa
+            const posX = e.clientX - containerRect.left;
+            const containerWidth = containerRect.width;
+            
+            // Calcular porcentaje (con límites min/max)
+            const minWidth = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--min-panel-width'));
+            const minPercent = (minWidth / containerWidth) * 100;
+            const maxPercent = 100 - minPercent;
+            
+            let percent = (posX / containerWidth) * 100;
+            percent = Math.min(Math.max(percent, minPercent), maxPercent);
+            
+            // Guardar la posición actual
+            resizerPosition = percent;
+            
+            // Aplicar tamaños
+            applyResizerPosition();
+        }
+        
+        function handleTouchResize(e) {
+            if (!isResizing || e.touches.length !== 1) return;
+            
+            const touch = e.touches[0];
+            const container = document.querySelector('.split-view');
+            const containerRect = container.getBoundingClientRect();
+            
+            // Calcular posición relativa
+            const posX = touch.clientX - containerRect.left;
+            const containerWidth = containerRect.width;
+            
+            // Calcular porcentaje (con límites min/max)
+            const minWidth = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--min-panel-width'));
+            const minPercent = (minWidth / containerWidth) * 100;
+            const maxPercent = 100 - minPercent;
+            
+            let percent = (posX / containerWidth) * 100;
+            percent = Math.min(Math.max(percent, minPercent), maxPercent);
+            
+            // Guardar la posición actual
+            resizerPosition = percent;
+            
+            // Aplicar tamaños
+            applyResizerPosition();
+            
+            e.preventDefault();
+        }
+        
+        function stopResize() {
+            isResizing = false;
+            document.body.style.cursor = '';
+            document.removeEventListener('mousemove', handleResize);
+            document.removeEventListener('touchmove', handleTouchResize);
+            document.removeEventListener('mouseup', stopResize);
+            document.removeEventListener('touchend', stopResize);
+            resizer.classList.remove('resizing');
+        }
+    }
+
+    function applyResizerPosition() {
+        editorPanel.style.flex = `0 0 ${resizerPosition}%`;
+        previewPanel.style.flex = `0 0 ${100 - resizerPosition}%`;
+    }
+
+    function checkScreenSize() {
+        const wasMobile = isMobile;
+        isMobile = window.innerWidth <= 768;
+        
+        // Si cambió el tipo de pantalla
+        if (wasMobile !== isMobile) {
+            if (isMobile) {
+                // Cambiar a modo móvil
+                setActiveTab(currentTab);
+                editorPanel.style.flex = '';
+                previewPanel.style.flex = '';
+            } else {
+                // Cambiar a modo escritorio
+                editorPanel.classList.remove('active');
+                previewPanel.classList.remove('active');
+                applyResizerPosition();
+            }
+        }
+    }
+
+    function setupButtonEvents() {
+        clearButton.addEventListener('click', function() {
+            markdownEditor.value = '';
+            formPreview.innerHTML = '<div class="empty-message">Ingresa contenido Markdown en el editor para ver la vista previa</div>';
+        });
+        
+        uploadButton.addEventListener('click', function() {
+            fileUpload.click();
+        });
+        
+        fileUpload.addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    markdownEditor.value = e.target.result;
+                };
+                reader.readAsText(file);
+            }
+        });
+        
+        exampleButton.addEventListener('click', function() {
+            markdownEditor.value = markdownExample;
+        });
+    }
+
     // Real-time parsing and preview
     markdownEditor.addEventListener('input', function() {
         parseAndRender();
@@ -303,7 +457,7 @@ document.addEventListener('DOMContentLoaded', function() {
             }
             
             // Check for questions with response type annotations
-            const questionWithResponseType = line.match(/^(.+\?)\s*@(\w+)$/);
+            const questionWithResponseType = line.match(/^(.+[?:])\s*@(\w+)$/);
             if (questionWithResponseType) {
                 const questionText = questionWithResponseType[1].trim();
                 const responseType = questionWithResponseType[2].toLowerCase();
@@ -773,7 +927,7 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Load example
     exampleButton.addEventListener('click', function() {
-        markdownEditor.value = exampleMarkdown;
+        markdownEditor.value = markdownExample;
         parseAndRender();
     });
     
@@ -786,12 +940,15 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Modal handling
     closeModal.addEventListener('click', function() {
-        descriptionModal.style.display = 'none';
+        sintaxModal.style.display = 'none';
+    });
+    openModal.addEventListener('click', function() {
+        sintaxModal.style.display = 'block';
     });
     
     window.addEventListener('click', function(event) {
-        if (event.target === descriptionModal) {
-            descriptionModal.style.display = 'none';
+        if (event.target === sintaxModal) {
+            sintaxModal.style.display = 'none';
         }
     });
     
@@ -810,7 +967,7 @@ document.addEventListener('DOMContentLoaded', function() {
             }
             
             // Show modal
-            descriptionModal.style.display = 'block';
+            sintaxModal.style.display = 'block';
         }
         
         // Delete question button
@@ -860,21 +1017,11 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
     
-    // Save description
-    saveDescriptionButton.addEventListener('click', function() {
-        if (currentEditingElement) {
-            currentEditingElement.description = descriptionTextarea.value;
-            
-            // Update markdown and re-render
-            markdownEditor.value = generateMarkdown(parsedContent);
-            renderFormPreview();
-            
-            // Close modal
-            descriptionModal.style.display = 'none';
-        }
+  // Save description
+    closeModal.addEventListener('click', function() {
+        sintaxModal.style.display = 'none';
     });
     
     // Initialize with example content
-    markdownEditor.value = exampleMarkdown;
     parseAndRender();
 });
