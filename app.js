@@ -77,6 +77,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     function setupTabEvents() {
+        setActiveTab('editor');
         editorTab.addEventListener('click', function() {
             setActiveTab('editor');
         });
@@ -223,20 +224,52 @@ document.addEventListener('DOMContentLoaded', function() {
             formPreview.innerHTML = '<div class="empty-message">Ingresa contenido Markdown en el editor para ver la vista previa</div>';
         });
         
-        uploadButton.addEventListener('click', function() {
+        uploadButton.addEventListener('click', function(e) {
+            e.preventDefault();
             fileUpload.click();
         });
         
-        fileUpload.addEventListener('change', function(e) {
+        fileUpload.addEventListener('change', async function(e) {
+            e.stopPropagation();
+    
             const file = e.target.files[0];
-            if (file) {
-                const reader = new FileReader();
-                reader.onload = function(e) {
-                    markdownEditor.value = e.target.result;
-                };
-                reader.readAsText(file);
+            if (!file) return;
+        
+            const ext = file.name.split('.').pop().toLowerCase();
+            const arrayBuffer = await file.arrayBuffer();
+            let markdown = "";
+        
+            switch (ext) {
+                case 'docx':
+                    markdown = await convertDocxToMarkdown(arrayBuffer);
+                    break;
+                case 'pdf':
+                    markdown = await convertPdfToMarkdown(arrayBuffer);
+                    break;
+                case 'txt':
+                    markdown = await convertTxtToMarkdown(arrayBuffer);
+                    break;
+                case 'md':
+                    const reader = new FileReader();
+                    reader.onload = function(event) {
+                        markdownEditor.value = event.target.result;
+                        parseAndRender();
+                    };
+                    reader.readAsText(file);
+                    fileUpload.value = ''; // Reset inmediato para .md (asincrónico)
+                    return;
+                default:
+                    // Podés mostrar un mensaje de error aquí si querés
+                    console.warn(`Extensión de archivo no soportada: ${ext}`);
+                    break;
             }
-        });
+        
+            markdownEditor.value = markdown;
+            parseAndRender();
+        
+            // Reset el input para permitir cargar el mismo archivo otra vez
+            fileUpload.value = '';
+        });        
         
         exampleButton.addEventListener('click', function() {
             markdownEditor.value = markdownExample;
@@ -703,12 +736,18 @@ document.addEventListener('DOMContentLoaded', function() {
     // Create form elements based on parsed content
     function createFormElement(item, index) {
         const element = document.createElement('div');
+        const fieldset = document.createElement('fieldset');
+        const legend = document.createElement('legend');
         element.className = 'form-element';
         element.dataset.index = index;
-        
         switch (item.type) {
             case 'heading1':
-                element.innerHTML = `<h1 class="heading1">${item.content}</h1>`;
+                if(index == 0){
+                    element.innerHTML = `<h1 class="heading1" id="heading1">${item.content}</h1>`;
+                } else {
+                    element.innerHTML = `<h1 class="heading1">${item.content}</h1>`;
+                }
+                
                 break;
                 
             case 'heading2':
@@ -727,19 +766,24 @@ document.addEventListener('DOMContentLoaded', function() {
                 if(item.responseType === 'multi' || item.responseType === 'single'){
                     break;
                 }
-                element.className = 'question-container';
-                
+               element.className = 'question-container';
+
                 let questionHtml = `
                     <div class="question-actions">
                         <!--button class="button button-icon edit-description" data-index="${index}">✏️</button-->
-                        <button class="button button-icon delete-question" data-index="${index}">🗑️</button>
+                        <button class="button button-icon delete-question" data-index="${index}" type="button" aria-label="Eliminar">🗑️</button>
                     </div>
-                    <div class="question-text">${item.content}</div>
+                    <fieldset aria-labelledby="${index}-legend">
+                        <legend class="question-text" id="${index}-legend">${item.content}</legend>
                 `;
                 
                 // Add description if it exists
                 if (item.description) {
-                    questionHtml += `<div class="question-description">${item.description}</div>`;
+                    if(item.description.length >= 50) {
+                        questionHtml += `<div class="question-description" role="region" aria-describedby="${index}-desc">${item.description}</div>`;
+                    } else {
+                        questionHtml += `<div class="question-description" aria-describedby="${index}-desc">${item.description}</div>`;
+                    }
                 }
                 
                 // Render different input types based on responseType
@@ -747,13 +791,13 @@ document.addEventListener('DOMContentLoaded', function() {
                 
                 switch (item.responseType) {
                     case 'long':
-                        questionHtml += `<textarea placeholder="Ingresa tu respuesta aquí..." class="long-answer"></textarea>`;
+                        questionHtml += `<label for="long-${item.id}" class="visually-hidden">${item.content}</label><textarea placeholder="Ingresa tu respuesta aquí..." class="long-answer" id="long-${item.id}" aria-describedby="${index}-desc"></textarea>`;
                         break;
                         
                     case 'file':
                         questionHtml += `
                             <div class="file-upload-container">
-                                <input type="file" id="file-${item.id}" class="file-input" accept=".pdf,.doc,.docx,.jpg,.jpeg,.png">
+                                <input type="file" id="file-${item.id}" class="file-input" accept=".pdf,.doc,.docx,.jpg,.jpeg,.png" aria-describedby="${index}-desc">
                                 <label for="file-${item.id}" class="file-label">
                                     <span class="file-icon">📎</span>
                                     <span class="file-text">Elegir un archivo</span>
@@ -764,11 +808,11 @@ document.addEventListener('DOMContentLoaded', function() {
                         break;
                         
                     default: // 'short' is the default
-                        questionHtml += `<input type="text" placeholder="Ingresa tu respuesta aquí..." class="short-answer">`;
+                        questionHtml += `<label for="short-${item.id}" class="visually-hidden">${item.content}</label><input type="text" placeholder="Ingresa tu respuesta aquí..." class="short-answer" id="short-${item.id}" aria-describedby="${index}-desc">`;
                         break;
                 }
                 
-                questionHtml += `</div>`;
+                questionHtml += `</fieldset>`;
                 
                 // Only show response type selector for text inputs (not for file uploads)
                 /*
@@ -815,14 +859,15 @@ document.addEventListener('DOMContentLoaded', function() {
                 let multipleChoiceHtml = `
                     <div class="question-actions">
                         <!--button class="button button-icon edit-description" data-index="${index}">✏️</button-->
-                        <button class="button button-icon delete-question" data-index="${index}">🗑️</button>
+                        <button class="button button-icon delete-question" data-index="${index}" type="button" aria-label="Eliminar">🗑️</button>
                     </div>
-                    <div class="question-text">${item.question}</div>
+                    <fieldset aria-labelledby="${index}-legend">
+                        <legend class="question-text" id="${index}-legend">${item.question}</legend>
                 `;
                 
                 // Add description if it exists
                 if (item.description) {
-                    multipleChoiceHtml += `<div class="question-description">${item.description}</div>`;
+                    multipleChoiceHtml += `<div class="question-description" aria-describedby="${index}-desc">${item.description}</div>`;
                 }
                 
                 multipleChoiceHtml += `<div class="options-container">`;
@@ -836,7 +881,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     `;
                 });
                 
-                multipleChoiceHtml += `</div>`;
+                multipleChoiceHtml += `</fieldset>`;
                 element.innerHTML = multipleChoiceHtml;
                 break;
                 
@@ -846,14 +891,15 @@ document.addEventListener('DOMContentLoaded', function() {
                 let singleChoiceHtml = `
                     <div class="question-actions">
                         <!--button class="button button-icon edit-description" data-index="${index}">✏️</button -->
-                        <button class="button button-icon delete-question" data-index="${index}">🗑️</button>
+                        <button class="button button-icon delete-question" data-index="${index}" type="button" aria-label="Eliminar">🗑️</button>
                     </div>
-                    <div class="question-text">${item.question}</div>
+                    <fieldset aria-labelledby="${index}-legend">
+                        <legend class="question-text" id="${index}-legend">${item.question}</legend>
                 `;
                 
                 // Add description if it exists
                 if (item.description) {
-                    singleChoiceHtml += `<div class="question-description">${item.description}</div>`;
+                    singleChoiceHtml += `<div class="question-description" aria-describedby="${index}-desc">${item.description}</div>`;
                 }
                 
                 singleChoiceHtml += `<div class="options-container">`;
@@ -867,7 +913,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     `;
                 });
                 
-                singleChoiceHtml += `</div>`;
+                singleChoiceHtml += `</fieldset>`;
                 element.innerHTML = singleChoiceHtml;
                 break;
                 
@@ -904,26 +950,7 @@ document.addEventListener('DOMContentLoaded', function() {
         return element;
     }
     
-    // File upload
-    uploadButton.addEventListener('click', function() {
-        fileUpload.click();
-    });
-    
-    fileUpload.addEventListener('change', function(e) {
-        const file = e.target.files[0];
-        if (!file) return;
-        
-        const reader = new FileReader();
-        reader.onload = function(event) {
-            markdownEditor.value = event.target.result;
-            parseAndRender();
-        };
-        
-        reader.readAsText(file);
-        
-        // Reset the input
-        fileUpload.value = '';
-    });
+
     
     // Load example
     exampleButton.addEventListener('click', function() {

@@ -5,13 +5,15 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Generador de Formularios desde Markdown</title>
     <link rel="stylesheet" href="styles.css">
+    <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 </head>
 <body>
     <div class="container">
         <h1 class="title">Generador de Formularios desde Markdown</h1>
         
         <!-- Tabs para móvil -->
-        <div class="tabs-mobile">
+        <div class="tabs-mobile" style="display: none;">
             <div class="tab-buttons">
                 <button id="editor-tab" class="tab-button active">Editor</button>
                 <button id="preview-tab" class="tab-button">Vista Previa del Formulario</button>
@@ -20,14 +22,14 @@
         
         <!-- Contenedor para vista dividida en desktop -->
         <div class="split-view">
-            <div id="editor-panel" class="split-panel">
+            <div id="editor-panel" class="split-panel" style="">
                 <div class="card">
                     <div class="card-header">
                         <div class="button-group">
                             <div>
-                                <input type="file" id="file-upload" accept=".md,.markdown,.txt" style="display: none;">
+                                <input type="file" id="file-upload" accept=".md,.markdown,.txt, .docx,.pdf" style="display: none;" value="Seleccionar Archivo">
                                 <button id="upload-button" class="button button-outline">
-                                    <span class="icon">📤</span> Subir Markdown
+                                    <span class="icon">📤</span> Subir Archivo
                                 </button>
                                 <button id="example-button" class="button button-outline">Cargar Ejemplo</button>
                             </div>
@@ -45,18 +47,19 @@
             </div>
             
             <!-- Divisor arrastrable -->
-            <div id="resizer" class="resizer"></div>
+            <div id="resizer" class="resizer" style=""></div>
             
-            <div id="preview-panel" class="split-panel">
+            <div id="preview-panel" class="split-panel" style="">
                 <div class="card">
-                    <div id="form-preview" class="form-preview">
+                    <div id="form-preview" role="form" class="form-preview" aria-labelledby="heading1">
                         <div class="empty-message">Ingresa contenido Markdown en el editor para ver la vista previa</div>
                     </div>
                 </div>
+                <button id="enviar">Enviar</button>
             </div>
         </div>
     </div>
-    <button id="open-modal">Guía de Sintaxis</button>
+    <button id="open-modal" style="">Guía de Sintaxis</button>
     <!-- Modal para editar descripciones -->
     <div id="sintax-modal" class="modal">
         <div class="modal-content">
@@ -105,7 +108,43 @@
             </div>
         </div>
     </div>
-
+    <script src="markdown-parser.js"></script>
+    <script src="save-form.js"></script>
     <script src="app.js"></script>
+    <!--script defer>
+        document.getElementById('markdown-editor').value = `# Formulario de Contacto
+
+## Información Personal
+
+¿Cuál es tu nombre completo? @short
+@desc Por favor, ingresa tu nombre y apellidos.
+
+¿Cuál es tu correo electrónico? @short
+@desc Usaremos este correo para contactarte.
+
+¿Cuál es tu número de teléfono? @short
+
+## Preferencias
+
+¿Cómo prefieres que te contactemos? @single
+- Correo electrónico
+- Teléfono
+- Mensaje de texto
+
+¿Qué días de la semana estás disponible? @multi
+- Lunes
+- Martes
+- Miércoles
+- Jueves
+- Viernes
+- Sábado
+- Domingo
+
+¿Tienes algún comentario adicional? @long
+@desc Cualquier información adicional que quieras compartir.
+
+¿Puedes adjuntar tu CV? @file
+@desc Archivos PDF o DOCX (máximo 5MB).`;
+    </script-->
 </body>
 </html>

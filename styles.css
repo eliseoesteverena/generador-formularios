@@ -34,6 +34,22 @@ body {
   background-color: #fff;
 }
 
+fieldset {
+  display: initial; /* o inline */
+  min-inline-size: auto;
+  margin-inline: 0;
+  border-width: 0;
+  border-style: none;
+  border-color: initial; /* o transparent */
+  border-image: none;
+  padding-block: 0;
+  padding-inline: 0;
+}
+legend {
+  display: initial; /* o inline */
+  unicode-bidi: normal;
+  padding-inline: 0;
+}
 .container {
   max-width: 1900px;
   width: 100%;
@@ -61,10 +77,14 @@ body {
 }
 
 .split-panel {
-  flex: 1;
+/*  flex: 1;*/
   overflow: auto;
-  padding: 0 0.5rem;
+  padding: 0;
   min-width: var(--min-panel-width);
+  width: 100%;
+}
+.split-panel:first-child {
+  width: 50%;
 }
 
 .resizer {
@@ -128,7 +148,6 @@ body {
   background-color: white;
   border-radius: var(--border-radius);
   box-shadow: var(--shadow);
-  padding: 1rem;
   height: 100%;
   display: flex;
   flex-direction: column;
@@ -219,7 +238,18 @@ textarea, input[type="text"] {
 .file-upload-container {
   margin-top: 0.5rem;
 }
+.upload-label {
+  display: inline-block;
+  padding: 10px 15px;
+  background-color: #007bff;
+  color: white;
+  border-radius: 5px;
+  cursor: pointer;
+}
 
+.upload-label:hover {
+  background-color: #0056b3;
+}
 .file-input {
   width: 0.1px;
   height: 0.1px;
@@ -357,10 +387,10 @@ textarea, input[type="text"] {
 
 .question-container {
   position: relative;
-  border: 1px solid var(--gray-300);
+  border: none;
+  border-bottom: 1px solid var(--gray-300);
   padding: 1rem;
-  border-radius: var(--border-radius);
-  background-color: var(--gray-50);
+  border-radius: 0;
   margin-bottom: 1rem;
 }
 
@@ -379,18 +409,31 @@ textarea, input[type="text"] {
 
 .question-description {
   margin-bottom: 0.75rem;
-  font-size: 0.875rem;
+  font-size: 0.975rem;
   color: var(--gray-600);
   background-color: white;
   padding: 0.5rem;
-  border-radius: var(--border-radius);
-  border: 1px solid var(--gray-200);
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0,0,0,0);
+  white-space: nowrap; /* Evita que el texto genere saltos de línea */
+  border: 0;
 }
 
 .answer-field {
   margin-top: 0.5rem;
 }
-
+.answer-field>label {
+  display: block;
+  font-size: 0.875rem;
+}
 .answer-toggle {
   margin-top: 0.5rem;
   display: flex;
