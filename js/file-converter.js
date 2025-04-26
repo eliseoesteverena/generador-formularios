@@ -1,12 +1,12 @@
 //  TXT
-async function convertTxtToMarkdown(arrayBuffer) {
+export async function convertTxtToMarkdown(arrayBuffer) {
     const decoder = new TextDecoder("utf-8");
     const text = decoder.decode(arrayBuffer);
     return text.trim();
 }
 
 //  DOCX
-async function convertDocxToMarkdown(arrayBuffer) {
+export async function convertDocxToMarkdown(arrayBuffer) {
     const zip = await JSZip.loadAsync(arrayBuffer);
     const xmlContent = await zip.file("word/document.xml").async("text");
     const xml = new DOMParser().parseFromString(xmlContent, "text/xml");
@@ -20,10 +20,10 @@ async function convertDocxToMarkdown(arrayBuffer) {
 
         const listInfo = getListLevel(p);
         if (listInfo) {
-        const indent = "  ".repeat(listInfo.level);
-        markdown += `${indent}- ${text}\n`;
+            const indent = "  ".repeat(listInfo.level);
+            markdown += `${indent}- ${text}\n`;
         } else {
-        markdown += `\n${text}\n`;
+            markdown += `\n${text}\n`;
         }
     }
 
@@ -40,12 +40,16 @@ function getListLevel(paragraphNode) {
     if (!numPr) return null;
     const ilvl = numPr.getElementsByTagName("w:ilvl")[0];
     const level = ilvl ? parseInt(ilvl.getAttribute("w:val")) : 0;
-    return { level };
+    return {
+        level
+    };
 }
 
-    // PDF
-async function convertPdfToMarkdown(arrayBuffer) {
-    const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+// PDF
+export async function convertPdfToMarkdown(arrayBuffer) {
+    const pdf = await pdfjsLib.getDocument({
+        data: arrayBuffer
+    }).promise;
     let markdown = "";
 
     for (let i = 1; i <= pdf.numPages; i++) {
@@ -64,7 +68,10 @@ async function convertPdfToMarkdown(arrayBuffer) {
             if (!str) continue;
 
             if (!linesMap.has(y)) linesMap.set(y, []);
-            linesMap.get(y).push({ x, str });
+            linesMap.get(y).push({
+                x,
+                str
+            });
         }
 
         // Ordenar líneas de arriba a abajo
@@ -73,7 +80,7 @@ async function convertPdfToMarkdown(arrayBuffer) {
         for (const y of sortedY) {
             const line = linesMap.get(y).sort((a, b) => a.x - b.x);
             const fullLine = line.map(l => l.str).join(" ").trim();
-            const indent = detectIndentLevel(line[0]?.x || 0);
+            const indent = detectIndentLevel(line[0] ?.x || 0);
 
             // Detectamos listas
             const isBullet = /^[-•▪●◦]/.test(fullLine);
