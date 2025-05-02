@@ -1,8 +1,9 @@
-import { parseAndRender } from './core.js';
+
+import { parseAndRender, parseMarkdown, markdownEditor } from './core.js';
 import { setupTabEvents, setupResizer, setupButtonEvents, checkScreenSize } from './ui.js';
+import { setupWysiwygObserver } from './syncBlock.js';
 
 // Referencias globales
-const markdownEditor = document.getElementById('markdown-editor');
 const formPreview = document.getElementById('form-preview');
 
 function init() {
@@ -10,7 +11,10 @@ function init() {
     setupResizer();
     setupButtonEvents(markdownEditor, formPreview);
     checkScreenSize();
-    parseAndRender(markdownEditor.value);
-}
 
+    let parsedContent = parseMarkdown(markdownEditor.value);
+    parseAndRender(markdownEditor.value);
+    
+    setupWysiwygObserver()
+}
 document.addEventListener('DOMContentLoaded', init);

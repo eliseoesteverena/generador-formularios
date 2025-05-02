@@ -6,7 +6,10 @@ export function parseToJson(preview) {
   
     elements.forEach(el => {
       const idx = parseInt(el.dataset.index, 10);
-  
+      
+      if (el.matches('.form-element') && el.children.length === 0) {
+        return;
+      }
       // SECCIONES: h1 o h2
       if (el.matches('.form-element')) {
         const title = el.querySelector('h2, h1')?.textContent;
@@ -61,7 +64,9 @@ export function parseToJson(preview) {
     });
   
     // 2) Imprime aquí, afuera del forEach
-    console.log(JSON.stringify(json));
+    const jsonResult = JSON.stringify(json)
+    console.log(jsonResult);
+    return jsonResult;
   }
   
 export function renderFromJson(json) {

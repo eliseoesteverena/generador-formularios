@@ -1,4 +1,7 @@
+let parsedContent = [];
+export { parsedContent };
 const markdownEditor = document.getElementById('markdown-editor');
+export { markdownEditor }
 const formPreview = document.getElementById('form-preview');
 
 // Real-time parsing and preview
@@ -8,7 +11,7 @@ markdownEditor.addEventListener('input', function() {
 
 export function parseAndRender() {
     const markdown = markdownEditor.value;
-    let parsedContent = parseMarkdown(markdown);
+    parsedContent = parseMarkdown(markdown);
     renderFormPreview(parsedContent);
 }
 
@@ -26,11 +29,12 @@ export function parseMarkdown(markdown) {
     let lastItemIndex = -1;
     let waitingForOptions = false;
 
+
     for (let i = 0; i < lines.length; i++) {
         const line = lines[i].trim();
 
         // Skip empty lines
-        if (!line) {
+        if (!line || !line === "@short" || !line === "@multi" || !line === "@single") {
             // If we were building a list, add it to the result
             if (currentList.length > 0) {
                 addListToResult(result, currentList, listType, currentQuestion, currentDescription);
@@ -300,7 +304,8 @@ export function parseMarkdown(markdown) {
             continue;
         }
 
-        // Default to paragraph
+
+    // Default to paragraph
         result.push({
             type: 'paragraph',
             content: line
@@ -367,6 +372,8 @@ export function generateId() {
 // Generate markdown from parsed content
 export function generateMarkdown(content) {
     let markdown = '';
+
+    content = purgeParsedContent(content);
 
     content.forEach((item, index) => {
         // Add a newline between items
@@ -449,17 +456,31 @@ export function renderFormPreview(parsedContent) {
     }
 
     formPreview.innerHTML = '';
+    
+    parsedContent = purgeParsedContent(parsedContent);
 
     parsedContent.forEach((item, index) => {
-        const element = createFormElement(item, index);
-        if (element) {
-            formPreview.appendChild(element);
-        }
+      const element = createFormElement(item, index);
+      if (element) {
+        formPreview.appendChild(element);
+      }
     });
+
 }
+
+export function purgeParsedContent(contentArray) {
+    return contentArray.filter(item => {
+      const shouldRemove = (
+        item.content === "@single" ||
+        (item.content === "@multi" && item.type === "paragraph")
+      );
+      return !shouldRemove; // Retornamos 'true' para mantener el elemento.
+    });
+  }
 
 // Create form elements based on parsed content
 export function createFormElement(item, index) {
+   
     const element = document.createElement('div');
     const fieldset = document.createElement('fieldset');
     const legend = document.createElement('legend');
@@ -468,23 +489,23 @@ export function createFormElement(item, index) {
     switch (item.type) {
         case 'heading1':
             if (index == 0) {
-                element.innerHTML = `<h1 class="heading1" id="heading1">${item.content}</h1>`;
+                element.innerHTML = `<h1 class="heading1" id="heading1" contenteditable="true">${item.content}</h1>`;
             } else {
-                element.innerHTML = `<h1 class="heading1">${item.content}</h1>`;
+                element.innerHTML = `<h1 class="heading1" contenteditable="true">${item.content}</h1>`;
             }
 
             break;
 
         case 'heading2':
-            element.innerHTML = `<h2 class="heading2">${item.content}</h2>`;
+            element.innerHTML = `<h2 class="heading2" contenteditable="true">${item.content}</h2>`;
             break;
 
         case 'heading3':
-            element.innerHTML = `<h3 class="heading3">${item.content}</h3>`;
+            element.innerHTML = `<h3 class="heading3" contenteditable="true">${item.content}</h3>`;
             break;
 
         case 'paragraph':
-            element.innerHTML = `<p class="paragraph">${item.content}</p>`;
+            element.innerHTML = `<p class="paragraph" contenteditable="true">${item.content}</p>`;
             break;
 
         case 'question':
@@ -499,15 +520,15 @@ export function createFormElement(item, index) {
                     <button class="button button-icon delete-question" data-index="${index}" type="button" aria-label="Eliminar">🗑️</button>
                 </div>
                 <fieldset aria-labelledby="${index}-legend">
-                    <legend class="question-text" id="${index}-legend">${item.content}</legend>
+                    <legend class="question-text" id="${index}-legend" contenteditable="true" tabindex="0">${item.content}</legend>
             `;
 
             // Add description if it exists
             if (item.description) {
                 if (item.description.length >= 50) {
-                    questionHtml += `<div class="question-description" role="region" aria-describedby="${index}-desc">${item.description}</div>`;
+                    questionHtml += `<p class="question-description" role="region" aria-describedby="${index}-desc" contenteditable="true">${item.description}</p>`;
                 } else {
-                    questionHtml += `<div class="question-description" aria-describedby="${index}-desc">${item.description}</div>`;
+                    questionHtml += `<p class="question-description" aria-describedby="${index}-desc" contenteditable="true">${item.description}</p>`;
                 }
             }
 
@@ -516,13 +537,13 @@ export function createFormElement(item, index) {
 
             switch (item.responseType) {
                 case 'long':
-                    questionHtml += `<label for="long-${item.id}" class="visually-hidden">${item.content}</label><textarea placeholder="Ingresa tu respuesta aquí..." class="long-answer" id="long-${item.id}" aria-describedby="${index}-desc"></textarea>`;
+                    questionHtml += `<label for="long-${item.id}" class="visually-hidden" contenteditable="true">${item.content}</label><textarea placeholder="Ingresa tu respuesta aquí..." class="long-answer" id="long-${item.id}" aria-describedby="${index}-desc"></textarea>`;
                     break;
 
                 case 'file':
                     questionHtml += `
                         <div class="file-upload-container">
-                            <input type="file" id="file-${item.id}" class="file-input" accept=".pdf,.doc,.docx,.jpg,.jpeg,.png" aria-describedby="${index}-desc">
+                            <input type="file" id="file-${item.id}" class="file-input" accept=".pdf,.doc,.docx,.jpg,.jpeg,.png" aria-describedby="${index}-desc" contenteditable="false">
                             <label for="file-${item.id}" class="file-label">
                                 <span class="file-icon">📎</span>
                                 <span class="file-text">Elegir un archivo</span>
@@ -533,7 +554,7 @@ export function createFormElement(item, index) {
                     break;
 
                 default: // 'short' is the default
-                    questionHtml += `<label for="short-${item.id}" class="visually-hidden">${item.content}</label><input type="text" placeholder="Ingresa tu respuesta aquí..." class="short-answer" id="short-${item.id}" aria-describedby="${index}-desc">`;
+                    questionHtml += `<label for="short-${item.id}" class="visually-hidden" contenteditable="true">${item.content}</label><input type="text" placeholder="Ingresa tu respuesta aquí..." class="short-answer" id="short-${item.id}" aria-describedby="${index}-desc" contenteditable="false">`;
                     break;
             }
 
@@ -587,12 +608,12 @@ export function createFormElement(item, index) {
                     <button class="button button-icon delete-question" data-index="${index}" type="button" aria-label="Eliminar">🗑️</button>
                 </div>
                 <fieldset aria-labelledby="${index}-legend">
-                    <legend class="question-text" id="${index}-legend">${item.question}</legend>
+                    <legend class="question-text" id="${index}-legend" contenteditable="true" tabindex="0">${item.question}</legend>
             `;
 
             // Add description if it exists
             if (item.description) {
-                multipleChoiceHtml += `<div class="question-description" aria-describedby="${index}-desc">${item.description}</div>`;
+                multipleChoiceHtml += `<p class="question-description" aria-describedby="${index}-desc">${item.description}</p>`;
             }
 
             multipleChoiceHtml += `<div class="options-container">`;
@@ -600,8 +621,8 @@ export function createFormElement(item, index) {
             item.options.forEach((option, optionIndex) => {
                 multipleChoiceHtml += `
                     <div class="checkbox-container">
-                        <input type="checkbox" id="option-${item.id}-${optionIndex}" class="custom-checkbox">
-                        <label for="option-${item.id}-${optionIndex}">${option}</label>
+                        <input type="checkbox" id="option-${item.id}-${optionIndex}" class="custom-checkbox" contenteditable="false">
+                        <label for="option-${item.id}-${optionIndex}" contenteditable="true">${option}</label>
                     </div>
                 `;
             });
@@ -619,12 +640,12 @@ export function createFormElement(item, index) {
                     <button class="button button-icon delete-question" data-index="${index}" type="button" aria-label="Eliminar">🗑️</button>
                 </div>
                 <fieldset aria-labelledby="${index}-legend">
-                    <legend class="question-text" id="${index}-legend">${item.question}</legend>
+                    <legend class="question-text" id="${index}-legend" contenteditable="true" tabindex="0">${item.question}</legend>
             `;
 
             // Add description if it exists
             if (item.description) {
-                singleChoiceHtml += `<div class="question-description" aria-describedby="${index}-desc">${item.description}</div>`;
+                singleChoiceHtml += `<p class="question-description" aria-describedby="${index}-desc" contenteditable="true">${item.description}</p>`;
             }
 
             singleChoiceHtml += `<div class="options-container">`;
@@ -632,8 +653,8 @@ export function createFormElement(item, index) {
             item.options.forEach((option, optionIndex) => {
                 singleChoiceHtml += `
                     <div class="radio-container">
-                        <input type="radio" name="radio-group-${item.id}" id="option-${item.id}-${optionIndex}" class="custom-radio">
-                        <label for="option-${item.id}-${optionIndex}">${option}</label>
+                        <input type="radio" name="radio-group-${item.id}" id="option-${item.id}-${optionIndex}" class="custom-radio" contenteditable="false">
+                        <label for="option-${item.id}-${optionIndex}" contenteditable="true">${option}</label>
                     </div>
                 `;
             });
@@ -675,6 +696,16 @@ export function createFormElement(item, index) {
     return element;
 }
 
+function purgedWords(content, wordsToDelete) {
+    const setOfWords = new Set(wordsToDelete);
+    
+    const lines = content.split('\n');
+    const linesFilters = lines.filter(line => !setOfWords.has(line.trim()));
+    
+    let txt = linesFilters.join('\n');
+    console.log(txt)
+    return linesFilters.join('\n');
+  }
 
 // Event delegation for dynamic elements
 formPreview.addEventListener('click', function(e) {

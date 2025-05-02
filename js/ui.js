@@ -1,4 +1,4 @@
-import { parseAndRender } from './core.js';
+import { parseAndRender, markdownEditor, parsedContent, renderFormPreview } from './core.js';
 import { convertTxtToMarkdown, convertDocxToMarkdown, convertPdfToMarkdown } from './file-converter.js';
 import { parseToJson, renderFromJson } from './json-parser.js';
 
@@ -30,7 +30,7 @@ const renderFromJsonBtn = document.getElementById('fromJsonBtn')
 const markdownExample = `# Formulario de Contacto
 
 ## Información Personal
-
+@multi
 ¿Cuál es tu nombre completo? @short
 @desc Por favor, ingresa tu nombre y apellidos.
 
@@ -259,11 +259,14 @@ export function setupButtonEvents(markdownEditor, formPreview) {
 
     exampleButton.addEventListener('click', function() {
         markdownEditor.value = markdownExample;
+        parseAndRender();
     });
 }
 
 
 parserToJsonBtn.addEventListener('click', () => parseToJson(preview));
+
+// Ejemplo de como renderizar en el editor y vista previa un formulario en formato JSON
 renderFromJsonBtn.addEventListener('click', () => {
     const json = {"formulario":{"elements":[{"index":0,"type":"section","title":"Formulario de Contacto"},{"index":1,"type":"section","title":"Información Personal"},{"index":2,"type":"question","text":"¿Cuál es tu nombre completo?","description":"Por favor, ingresa tu nombre y apellidos.","response":{"type":"short","placeholder":"Ingresa tu respuesta aquí..."}},{"index":3,"type":"question","text":"¿Cuál es tu correo electrónico?","description":"Usaremos este correo para contactarte.","response":{"type":"short","placeholder":"Ingresa tu respuesta aquí..."}},{"index":4,"type":"question","text":"¿Cuál es tu número de teléfono?","response":{"type":"short","placeholder":"Ingresa tu respuesta aquí..."}},{"index":5,"type":"section","title":"Preferencias"},{"index":6,"type":"question","text":"¿Cómo prefieres que te contactemos?","response":{"type":"single","options":[{"id":"option-mq5y3gyiaut-0","text":"Correo electrónico"},{"id":"option-mq5y3gyiaut-1","text":"Teléfono"},{"id":"option-mq5y3gyiaut-2","text":"Mensaje de texto"}]}},{"index":8,"type":"question","text":"¿Qué días de la semana estás disponible?","response":{"type":"multi","options":[{"id":"option-t64va53p48q-0","text":"Lunes"},{"id":"option-t64va53p48q-1","text":"Martes"},{"id":"option-t64va53p48q-2","text":"Miércoles"},{"id":"option-t64va53p48q-3","text":"Jueves"},{"id":"option-t64va53p48q-4","text":"Viernes"},{"id":"option-t64va53p48q-5","text":"Sábado"},{"id":"option-t64va53p48q-6","text":"Domingo"}]}},{"index":10,"type":"question","text":"¿Tienes algún comentario adicional?","description":"Cualquier información adicional que quieras compartir.","response":{"type":"long","placeholder":"Ingresa tu respuesta aquí..."}},{"index":11,"type":"question","text":"¿Puedes adjuntar tu CV?","description":"Archivos PDF o DOCX (máximo 5MB).","response":{"type":"file","accept":[".pdf",".doc",".docx",".jpg",".jpeg",".png"]}}]}};
     
