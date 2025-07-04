@@ -71,13 +71,13 @@ export function setupTabEvents() {
         setActiveTab('preview');
         generatePreview();
     });
-/*
+
     previewButton.addEventListener('click', function() {
         if (isMobile) {
             setActiveTab('preview');
         }
         generatePreview();
-    });*/
+    });
 }
 
 function setActiveTab(tab) {
@@ -264,7 +264,9 @@ export function setupButtonEvents(markdownEditor, formPreview) {
 }
 
 
-parserToJsonBtn.addEventListener('click', () => parseToJson(preview));
+parserToJsonBtn.addEventListener('click', () => parseToJson(preview)
+
+);
 
 // Ejemplo de como renderizar en el editor y vista previa un formulario en formato JSON
 renderFromJsonBtn.addEventListener('click', () => {

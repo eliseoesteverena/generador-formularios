@@ -1,3 +1,4 @@
+import { el, mount } from './mount.js';
 let parsedContent = [];
 export { parsedContent };
 const markdownEditor = document.getElementById('markdown-editor');
@@ -450,8 +451,10 @@ export function generateMarkdown(content) {
 
 // Render form preview
 export function renderFormPreview(parsedContent) {
+navigator.clipboard.writeText(JSON.stringify(parsedContent))
     if (parsedContent.length === 0) {
-        formPreview.innerHTML = '<div class="empty-message">Ingresa contenido Markdown en el editor para ver la vista previa</div>';
+        //formPreview.innerHTML = '<div class="empty-message">Ingresa contenido Markdown en el editor para ver la vista previa</div>';
+        formPreview.appendChild(el('div.empty-message', {textContent: 'Ingresa contenido Markdown en el editor para ver la vista previa'}));
         return;
     }
 
@@ -479,13 +482,15 @@ export function purgeParsedContent(contentArray) {
   }
 
 // Create form elements based on parsed content
+
 export function createFormElement(item, index) {
    
-    const element = document.createElement('div');
+    const element = el('div');
     const fieldset = document.createElement('fieldset');
     const legend = document.createElement('legend');
     element.className = 'form-element';
     element.dataset.index = index;
+    /*
     switch (item.type) {
         case 'heading1':
             if (index == 0) {
@@ -577,7 +582,7 @@ export function createFormElement(item, index) {
                     `;
                 }
                 */
-
+/*
             element.innerHTML = questionHtml;
 
             // Add event listener for file inputs
@@ -692,7 +697,295 @@ export function createFormElement(item, index) {
         default:
             return null;
     }
+*/
+switch (item.type) {
+    case 'heading1':
+        const h1Element = el('h1.heading1', {
+            id: index === 0 ? 'heading1' : undefined,
+            
+        }, item.content);
+        element.appendChild(h1Element);
+        break;
 
+    case 'heading2':
+        const h2Element = el('h2.heading2', {
+            
+        }, item.content);
+        element.appendChild(h2Element);
+        break;
+
+    case 'heading3':
+        const h3Element = el('h3.heading3', {
+            
+        }, item.content);
+        element.appendChild(h3Element);
+        break;
+
+    case 'paragraph':
+        const pElement = el('p.paragraph', {
+            
+        }, item.content);
+        element.appendChild(pElement);
+        break;
+
+    case 'question':
+        if (item.responseType === 'multi' || item.responseType === 'single') {
+            break;
+        }
+        element.className = 'question-container';
+
+        // Create question actions
+        const questionActions = el('div.question-actions', {}, [
+            el('button.button.button-icon.delete-question', {
+                'data-index': index,
+                type: 'button',
+                'aria-label': 'Eliminar'
+            }, '🗑️')
+        ]);
+
+        // Create legend
+        const legend = el('legend.question-text', {
+            id: `${index}-legend`,
+    
+            tabindex: '0'
+        }, item.content);
+
+        // Create description if exists
+        const descriptionElement = item.description ? 
+            el('p.question-description', {
+                role: item.description.length >= 50 ? 'region' : undefined,
+                'aria-describedby': `${index}-desc`,
+                
+            }, item.description) : null;
+
+        // Create answer field based on response type
+        let answerField;
+        switch (item.responseType) {
+            case 'long':
+                answerField = el('div.answer-field', {}, [
+                    el('label.visually-hidden', {
+                        for: `long-${item.id}`,
+                        
+                    }, item.content),
+                    el('textarea.long-answer', {
+                        placeholder: 'Ingresa tu respuesta aquí...',
+                        id: `long-${item.id}`,
+                        'aria-describedby': `${index}-desc`
+                    })
+                ]);
+                break;
+
+            case 'file':
+                answerField = el('div.answer-field', {}, [
+                    el('div.file-upload-container', {}, [
+                        el('input.file-input', {
+                            type: 'file',
+                            id: `file-${item.id}`,
+                            accept: '.pdf,.doc,.docx,.jpg,.jpeg,.png',
+                            'aria-describedby': `${index}-desc`,
+                            contenteditable: 'false'
+                        }),
+                        el('label.file-label', {
+                            for: `file-${item.id}`
+                        }, [
+                            el('span.file-icon', {}, '📎'),
+                            el('span.file-text', {}, 'Elegir un archivo')
+                        ]),
+                        el('div.file-info', {}, 'Ningún archivo seleccionado')
+                    ])
+                ]);
+                break;
+
+            default: // 'short' is the default
+                answerField = el('div.answer-field', {}, [
+                    el('label.visually-hidden', {
+                        for: `short-${item.id}`,
+                        
+                    }, item.content),
+                    el('input.short-answer', {
+                        type: 'text',
+                        placeholder: 'Ingresa tu respuesta aquí...',
+                        id: `short-${item.id}`,
+                        'aria-describedby': `${index}-desc`,
+                        contenteditable: 'false'
+                    })
+                ]);
+                break;
+        }
+
+        // Create fieldset with all children
+        const fieldsetChildren = [legend];
+        if (descriptionElement) {
+            fieldsetChildren.push(descriptionElement);
+        }
+        fieldsetChildren.push(answerField);
+
+        const fieldset = el('fieldset', {
+            'aria-labelledby': `${index}-legend`
+        }, fieldsetChildren);
+
+        // Append everything to element
+        element.appendChild(questionActions);
+        element.appendChild(fieldset);
+
+        // Add event listener for file inputs
+        if (item.responseType === 'file') {
+            setTimeout(() => {
+                const fileInput = element.querySelector('.file-input');
+                const fileInfo = element.querySelector('.file-info');
+
+                if (fileInput && fileInfo) {
+                    fileInput.addEventListener('change', function() {
+                        if (this.files && this.files.length > 0) {
+                            fileInfo.textContent = this.files[0].name;
+                        } else {
+                            fileInfo.textContent = 'Ningún archivo seleccionado';
+                        }
+                    });
+                }
+            }, 0);
+        }
+        break;
+
+    case 'multipleChoice':
+        element.className = 'question-container';
+
+        // Create question actions
+        const multipleActions = el('div.question-actions', {}, [
+            el('button.button.button-icon.delete-question', {
+                'data-index': index,
+                type: 'button',
+                'aria-label': 'Eliminar'
+            }, '🗑️')
+        ]);
+
+        // Create legend
+        const multipleLegend = el('legend.question-text', {
+            id: `${index}-legend`,
+    
+            tabindex: '0'
+        }, item.question);
+
+        // Create description if exists
+        const multipleDescription = item.description ? 
+            el('p.question-description', {
+                'aria-describedby': `${index}-desc`
+            }, item.description) : null;
+
+        // Create options
+        const optionsContainer = el('div.options-container', {}, 
+            item.options.map((option, optionIndex) => 
+                el('div.checkbox-container', {}, [
+                    el('input.custom-checkbox', {
+                        type: 'checkbox',
+                        id: `option-${item.id}-${optionIndex}`,
+                        contenteditable: 'false'
+                    }),
+                    el('label', {
+                        for: `option-${item.id}-${optionIndex}`,
+                        
+                    }, option)
+                ])
+            )
+        );
+
+        // Create fieldset with all children
+        const multipleFieldsetChildren = [multipleLegend];
+        if (multipleDescription) {
+            multipleFieldsetChildren.push(multipleDescription);
+        }
+        multipleFieldsetChildren.push(optionsContainer);
+
+        const multipleFieldset = el('fieldset', {
+            'aria-labelledby': `${index}-legend`
+        }, multipleFieldsetChildren);
+
+        // Append everything to element
+        element.appendChild(multipleActions);
+        element.appendChild(multipleFieldset);
+        break;
+
+    case 'singleChoice':
+        element.className = 'question-container';
+
+        // Create question actions
+        const singleActions = el('div.question-actions', {}, [
+            el('button.button.button-icon.delete-question', {
+                'data-index': index,
+                type: 'button',
+                'aria-label': 'Eliminar'
+            }, '🗑️')
+        ]);
+
+        // Create legend
+        const singleLegend = el('legend.question-text', {
+            id: `${index}-legend`,
+    
+            tabindex: '0'
+        }, item.question);
+
+        // Create description if exists
+        const singleDescription = item.description ? 
+            el('p.question-description', {
+                'aria-describedby': `${index}-desc`,
+                
+            }, item.description) : null;
+
+        // Create options
+        const singleOptionsContainer = el('div.options-container', {}, 
+            item.options.map((option, optionIndex) => 
+                el('div.radio-container', {}, [
+                    el('input.custom-radio', {
+                        type: 'radio',
+                        name: `radio-group-${item.id}`,
+                        id: `option-${item.id}-${optionIndex}`,
+                        contenteditable: 'false'
+                    }),
+                    el('label', {
+                        for: `option-${item.id}-${optionIndex}`,
+                        
+                    }, option)
+                ])
+            )
+        );
+
+        // Create fieldset with all children
+        const singleFieldsetChildren = [singleLegend];
+        if (singleDescription) {
+            singleFieldsetChildren.push(singleDescription);
+        }
+        singleFieldsetChildren.push(singleOptionsContainer);
+
+        const singleFieldset = el('fieldset', {
+            'aria-labelledby': `${index}-legend`
+        }, singleFieldsetChildren);
+
+        // Append everything to element
+        element.appendChild(singleActions);
+        element.appendChild(singleFieldset);
+        break;
+
+    case 'list':
+        const listElement = el('ul.list', {}, 
+            item.items.map(listItem => 
+                el('li', {}, listItem)
+            )
+        );
+        element.appendChild(listElement);
+        break;
+
+    case 'orderedList':
+        const orderedListElement = el('ol.ordered-list', {}, 
+            item.items.map(listItem => 
+                el('li', {}, listItem)
+            )
+        );
+        element.appendChild(orderedListElement);
+        break;
+
+    default:
+        return null;
+}
     return element;
 }
 

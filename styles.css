@@ -117,7 +117,7 @@ legend {
 
 /* Tabs for mobile */
 .tabs-mobile {
-  display: none;
+  display: block;
 }
 
 .tab-buttons {

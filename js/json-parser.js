@@ -66,6 +66,14 @@ export function parseToJson(preview) {
     // 2) Imprime aquí, afuera del forEach
     const jsonResult = JSON.stringify(json)
     console.log(jsonResult);
+    
+  navigator.clipboard.writeText(jsonResult)
+    .then(() => {
+      console.log('Texto copiado al portapapeles');
+    })
+    .catch(err => {
+      console.error('Error al copiar: ', err);
+    });
     return jsonResult;
   }
   
